@@ -56,7 +56,13 @@ Route::middleware(['auth', 'role:admin'])
 
         // CRUDs completos
         Route::resource('clientes', ClienteController::class);
+        Route::get('clientes-vue', function () {
+            return view('clientes.vue');
+        })->name('clientes.vue');
         Route::resource('empleados', EmpleadoController::class);
+        Route::get('empleados-inertia', function () {
+            return inertia('Empleados');
+        })->name('empleados.inertia');
         Route::resource('tareas', TareaController::class);
         Route::resource('cuotas', CuotaController::class);
 
@@ -71,6 +77,12 @@ Route::middleware(['auth', 'role:admin'])
         // Factura PDF de una cuota
         Route::get('cuotas/{cuota}/factura', [CuotaController::class, 'factura'])
             ->name('cuotas.factura');
+
+        // API para Vue/Quasar
+        Route::prefix('api')->name('api.')->group(function () {
+            Route::apiResource('clientes', \App\Http\Controllers\Api\ClienteApiController::class);
+            Route::apiResource('empleados', \App\Http\Controllers\Api\EmpleadoApiController::class);
+        });
     });
 
 /*

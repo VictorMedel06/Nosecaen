@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nosecaen - {{ $title ?? 'Panel' }}</title>
 
@@ -10,6 +11,14 @@
 
     {{-- FontAwesome --}}
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    {{-- DataTables CSS --}}
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
+    @if (isset($page))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @inertiaHead
+    @endif
 </head>
 <body class="bg-light">
 
@@ -30,15 +39,39 @@
                                 <i class="fa fa-list me-1"></i> Tareas
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('admin.clientes.index') }}">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa fa-users me-1"></i> Clientes
                             </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('admin.clientes.index') }}">
+                                        <i class="fa fa-list me-1"></i> Vista Normal
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('admin.clientes.vue') }}">
+                                        <i class="fab fa-vuejs me-1"></i> Vista Vue
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('admin.empleados.index') }}">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa fa-user-tie me-1"></i> Empleados
                             </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('admin.empleados.index') }}">
+                                        <i class="fa fa-list me-1"></i> Vista Normal
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('admin.empleados.inertia') }}">
+                                        <i class="fab fa-vuejs me-1"></i> Vista Inertia
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.cuotas.index') }}">
@@ -111,12 +144,30 @@
     @endif
 
     {{-- Contenido de cada vista --}}
-    @yield('content')
+    @if (isset($page))
+        <div id="inertia-loading" class="mb-3">
+            <div class="alert alert-info mb-0">
+                Cargando...
+            </div>
+        </div>
+        @inertia
+    @else
+        @yield('content')
+    @endif
 
 </div>
 
 {{-- Bootstrap JS --}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+{{-- jQuery (necesario para DataTables) --}}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+{{-- DataTables JS --}}
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+@stack('scripts')
 
 </body>
 </html>

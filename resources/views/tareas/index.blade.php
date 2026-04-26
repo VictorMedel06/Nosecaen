@@ -11,8 +11,21 @@
 </div>
 
 <div class="card shadow-sm">
-    <div class="card-body p-0">
-        <table class="table table-hover mb-0">
+    <div class="card-body">
+        {{-- Filtro por estado --}}
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Filtrar por estado:</label>
+                <select id="filtroEstado" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Realizada">Realizada</option>
+                    <option value="Cancelada">Cancelada</option>
+                </select>
+            </div>
+        </div>
+
+        <table id="tablaTareas" class="table table-hover table-bordered">
             <thead class="table-dark">
                 <tr>
                     <th>Cliente</th>
@@ -56,7 +69,7 @@
                             </a>
                             <form action="{{ route('admin.tareas.destroy', $tarea) }}"
                                   method="POST" class="d-inline"
-                                  onsubmit="return confirm('¿Seguro que quieres eliminar esta tarea?')">
+                                  onsubmit="return confirmarEliminar()">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn btn-sm btn-danger">
@@ -83,3 +96,38 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+
+    // Inicializar DataTables con configuración en español
+    var tabla = $('#tablaTareas').DataTable({
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+        },
+        pageLength: 10,
+        order: [[5, 'asc']], // Ordenar por fecha de realización por defecto
+        columnDefs: [
+            { orderable: false, targets: 6 } // La columna de acciones no es ordenable
+        ]
+    });
+
+    // Filtro por estado usando botones
+    $('#filtroEstado').on('change', function() {
+        var estado = $(this).val();
+        if (estado === '') {
+            tabla.column(4).search('').draw();
+        } else {
+            tabla.column(4).search(estado).draw();
+        }
+    });
+
+});
+
+// Confirmación de eliminación con JavaScript
+function confirmarEliminar() {
+    return confirm('¿Seguro que quieres eliminar esta tarea? Esta acción no se puede deshacer.');
+}
+</script>
+@endpush
