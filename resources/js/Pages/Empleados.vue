@@ -1,9 +1,14 @@
 <template>
-    <AppLayout>
+    <div>
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>
-                <i class="fa fa-user-tie me-2"></i>Empleados — Inertia.js
-            </h2>
+            <div class="d-flex align-items-center gap-3">
+                <a href="/admin/empleados" class="btn btn-secondary">
+                    <i class="fa fa-arrow-left me-1"></i> Volver
+                </a>
+                <h2 class="mb-0">
+                    <i class="fa fa-user-tie me-2"></i>Empleados — Inertia.js
+                </h2>
+            </div>
             <button class="btn btn-primary" @click="abrirModalCrear">
                 <i class="fa fa-plus me-1"></i> Nuevo Empleado
             </button>
@@ -152,13 +157,12 @@
             </div>
         </div>
 
-    </AppLayout>
+    </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
-import AppLayout from '../Layouts/AppLayout.vue';
 
 const empleados = ref([]);
 const mensaje = ref('');

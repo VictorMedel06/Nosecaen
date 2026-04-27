@@ -8,6 +8,7 @@
 
     {{-- Bootstrap CSS --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/nosecaen.css" rel="stylesheet">
 
     {{-- FontAwesome --}}
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -15,8 +16,11 @@
     {{-- DataTables CSS --}}
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
 
+    @if (file_exists(public_path('build/manifest.json')))
+        @vite(['resources/js/app.js'])
+    @endif
+
     @if (isset($page))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
         @inertiaHead
     @endif
 </head>
@@ -25,7 +29,7 @@
 {{-- NAVBAR --}}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand" href="#">
+        <a class="navbar-brand" href="{{ auth()->check() ? route('dashboard') : route('home') }}">
             <i class="fa fa-elevator me-2"></i> Nosecaen
         </a>
 
@@ -34,6 +38,11 @@
 
                 @auth
                     @if(auth()->user()->isAdmin())
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('admin.dashboard') }}">
+                                <i class="fa fa-gauge-high me-1"></i> Dashboard
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.tareas.index') }}">
                                 <i class="fa fa-list me-1"></i> Tareas
@@ -79,6 +88,11 @@
                             </a>
                         </li>
                     @else
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('operario.dashboard') }}">
+                                <i class="fa fa-gauge-high me-1"></i> Dashboard
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('operario.tareas.index') }}">
                                 <i class="fa fa-list me-1"></i> Mis Tareas
@@ -133,27 +147,17 @@
     @endif
 
     {{-- Errores de validación --}}
-    @if($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+@if($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
-    {{-- Contenido de cada vista --}}
-    @if (isset($page))
-        <div id="inertia-loading" class="mb-3">
-            <div class="alert alert-info mb-0">
-                Cargando...
-            </div>
-        </div>
-        @inertia
-    @else
-        @yield('content')
-    @endif
+    @yield('content')
 
 </div>
 
