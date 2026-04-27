@@ -103,15 +103,16 @@ $(document).ready(function() {
 
     // Inicializar DataTables con configuración en español
     var tabla = $('#tablaTareas').DataTable({
-        language: {
-            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-        },
-        pageLength: 10,
-        order: [[5, 'asc']], // Ordenar por fecha de realización por defecto
-        columnDefs: [
-            { orderable: false, targets: 6 } // La columna de acciones no es ordenable
-        ]
-    });
+    retrieve: true,
+    language: {
+        url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+    },
+    pageLength: 10,
+    order: [[5, 'asc']],
+    columnDefs: [
+        { orderable: false, targets: -1 }
+    ]
+});
 
     // Filtro por estado usando botones
     $('#filtroEstado').on('change', function() {

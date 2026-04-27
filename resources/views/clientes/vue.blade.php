@@ -217,6 +217,13 @@ createApp({
         // Configurar Axios con el token CSRF de Laravel
         axios.defaults.headers.common['X-CSRF-TOKEN'] =
             document.querySelector('meta[name="csrf-token"]')?.content;
+        axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
+        const baseUrl = (document.querySelector('meta[name="base-url"]')?.getAttribute('content') || '')
+            .replace(/\/+$/, '');
+        if (baseUrl) {
+            axios.defaults.baseURL = baseUrl;
+        }
 
         this.cargarClientes();
     },
@@ -226,10 +233,15 @@ createApp({
         async cargarClientes() {
             this.cargando = true;
             try {
-                const response = await axios.get('/admin/api/clientes');
+                const response = await axios.get('admin/api/clientes');
                 this.clientes = response.data;
             } catch (error) {
+                const status = error.response?.status;
+                if (status === 401 || status === 419) {
+                    this.mostrarMensaje('Sesión caducada. Recarga la página y vuelve a iniciar sesión.', 'danger');
+                } else {
                 this.mostrarMensaje('Error al cargar los clientes.', 'danger');
+                }
             } finally {
                 this.cargando = false;
             }
@@ -293,12 +305,12 @@ createApp({
             try {
                 if (this.modoEdicion) {
                     await axios.put(
-                        `/admin/api/clientes/${this.clienteEditandoId}`,
+                        `admin/api/clientes/${this.clienteEditandoId}`,
                         this.formulario
                     );
                     this.mostrarMensaje('Cliente actualizado correctamente.', 'success');
                 } else {
-                    await axios.post('/admin/api/clientes', this.formulario);
+                    await axios.post('admin/api/clientes', this.formulario);
                     this.mostrarMensaje('Cliente creado correctamente.', 'success');
                 }
 
@@ -313,7 +325,12 @@ createApp({
                     // Errores de validación del servidor
                     this.errores = error.response.data.errors;
                 } else {
+                    const status = error.response?.status;
+                    if (status === 401 || status === 419) {
+                        this.mostrarMensaje('Sesión caducada. Recarga la página y vuelve a iniciar sesión.', 'danger');
+                    } else {
                     this.mostrarMensaje('Error al guardar el cliente.', 'danger');
+                    }
                 }
             } finally {
                 this.guardando = false;
@@ -327,11 +344,16 @@ createApp({
             }
 
             try {
-                await axios.delete(`/admin/api/clientes/${cliente.id}`);
+                await axios.delete(`admin/api/clientes/${cliente.id}`);
                 this.mostrarMensaje('Cliente eliminado correctamente.', 'success');
                 await this.cargarClientes();
             } catch (error) {
+                const status = error.response?.status;
+                if (status === 401 || status === 419) {
+                    this.mostrarMensaje('Sesión caducada. Recarga la página y vuelve a iniciar sesión.', 'danger');
+                } else {
                 this.mostrarMensaje('Error al eliminar el cliente.', 'danger');
+                }
             }
         },
 

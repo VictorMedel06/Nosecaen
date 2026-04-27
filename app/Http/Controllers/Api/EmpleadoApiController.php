@@ -6,40 +6,92 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class EmpleadoApiController extends Controller
 {
+    private function hasUserColumn(string $column): bool
+    {
+        static $cache = [];
+
+        if (!array_key_exists($column, $cache)) {
+            $cache[$column] = Schema::hasColumn('users', $column);
+        }
+
+        return $cache[$column];
+    }
+
     public function index()
     {
-        $empleados = User::orderBy('nombre')->get();
+        $orderColumn = $this->hasUserColumn('nombre') ? 'nombre' : 'name';
+        $empleados = User::orderBy($orderColumn)->get();
 
         return response()->json($empleados);
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'dni' => 'required|string|max:12|unique:users,dni',
+        $rules = [
             'nombre' => 'required|string|max:120',
             'email' => 'required|email|max:150|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'telefono' => 'nullable|string|max:30',
-            'direccion' => 'nullable|string|max:255',
-            'fecha_alta' => 'nullable|date',
-            'tipo' => 'required|in:admin,operario',
-        ]);
+        ];
 
-        $empleado = User::create([
-            'dni' => $validated['dni'],
-            'nombre' => $validated['nombre'],
+        if ($this->hasUserColumn('dni')) {
+            $rules['dni'] = 'required|string|max:12|unique:users,dni';
+        } else {
+            $rules['dni'] = 'nullable|string|max:12';
+        }
+
+        if ($this->hasUserColumn('telefono')) {
+            $rules['telefono'] = 'nullable|string|max:30';
+        }
+
+        if ($this->hasUserColumn('direccion')) {
+            $rules['direccion'] = 'nullable|string|max:255';
+        }
+
+        if ($this->hasUserColumn('fecha_alta')) {
+            $rules['fecha_alta'] = 'nullable|date';
+        }
+
+        if ($this->hasUserColumn('tipo')) {
+            $rules['tipo'] = 'required|in:admin,operario';
+        }
+
+        $validated = $request->validate($rules);
+
+        $data = [
             'name' => $validated['nombre'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'telefono' => $validated['telefono'] ?? null,
-            'direccion' => $validated['direccion'] ?? null,
-            'fecha_alta' => $validated['fecha_alta'] ?? null,
-            'tipo' => $validated['tipo'],
-        ]);
+        ];
+
+        if ($this->hasUserColumn('nombre')) {
+            $data['nombre'] = $validated['nombre'];
+        }
+
+        if ($this->hasUserColumn('dni') && array_key_exists('dni', $validated)) {
+            $data['dni'] = $validated['dni'];
+        }
+
+        if ($this->hasUserColumn('telefono')) {
+            $data['telefono'] = $validated['telefono'] ?? null;
+        }
+
+        if ($this->hasUserColumn('direccion')) {
+            $data['direccion'] = $validated['direccion'] ?? null;
+        }
+
+        if ($this->hasUserColumn('fecha_alta')) {
+            $data['fecha_alta'] = $validated['fecha_alta'] ?? null;
+        }
+
+        if ($this->hasUserColumn('tipo')) {
+            $data['tipo'] = $validated['tipo'];
+        }
+
+        $empleado = User::create($data);
 
         return response()->json($empleado, 201);
     }
@@ -51,27 +103,64 @@ class EmpleadoApiController extends Controller
 
     public function update(Request $request, User $empleado)
     {
-        $validated = $request->validate([
-            'dni' => 'required|string|max:12|unique:users,dni,' . $empleado->id,
+        $rules = [
             'nombre' => 'required|string|max:120',
             'email' => 'required|email|max:150|unique:users,email,' . $empleado->id,
             'password' => 'nullable|string|min:8|confirmed',
-            'telefono' => 'nullable|string|max:30',
-            'direccion' => 'nullable|string|max:255',
-            'fecha_alta' => 'nullable|date',
-            'tipo' => 'required|in:admin,operario',
-        ]);
+        ];
+
+        if ($this->hasUserColumn('dni')) {
+            $rules['dni'] = 'required|string|max:12|unique:users,dni,' . $empleado->id;
+        } else {
+            $rules['dni'] = 'nullable|string|max:12';
+        }
+
+        if ($this->hasUserColumn('telefono')) {
+            $rules['telefono'] = 'nullable|string|max:30';
+        }
+
+        if ($this->hasUserColumn('direccion')) {
+            $rules['direccion'] = 'nullable|string|max:255';
+        }
+
+        if ($this->hasUserColumn('fecha_alta')) {
+            $rules['fecha_alta'] = 'nullable|date';
+        }
+
+        if ($this->hasUserColumn('tipo')) {
+            $rules['tipo'] = 'required|in:admin,operario';
+        }
+
+        $validated = $request->validate($rules);
 
         $data = [
-            'dni' => $validated['dni'],
-            'nombre' => $validated['nombre'],
             'name' => $validated['nombre'],
             'email' => $validated['email'],
-            'telefono' => $validated['telefono'] ?? null,
-            'direccion' => $validated['direccion'] ?? null,
-            'fecha_alta' => $validated['fecha_alta'] ?? null,
-            'tipo' => $validated['tipo'],
         ];
+
+        if ($this->hasUserColumn('nombre')) {
+            $data['nombre'] = $validated['nombre'];
+        }
+
+        if ($this->hasUserColumn('dni') && array_key_exists('dni', $validated)) {
+            $data['dni'] = $validated['dni'];
+        }
+
+        if ($this->hasUserColumn('telefono')) {
+            $data['telefono'] = $validated['telefono'] ?? null;
+        }
+
+        if ($this->hasUserColumn('direccion')) {
+            $data['direccion'] = $validated['direccion'] ?? null;
+        }
+
+        if ($this->hasUserColumn('fecha_alta')) {
+            $data['fecha_alta'] = $validated['fecha_alta'] ?? null;
+        }
+
+        if ($this->hasUserColumn('tipo')) {
+            $data['tipo'] = $validated['tipo'];
+        }
 
         if (!empty($validated['password'])) {
             $data['password'] = Hash::make($validated['password']);

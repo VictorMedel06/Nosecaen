@@ -2,7 +2,7 @@
     <div>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center gap-3">
-                <a href="/admin/empleados" class="btn btn-secondary">
+                <a :href="volverHref" class="btn btn-secondary">
                     <i class="fa fa-arrow-left me-1"></i> Volver
                 </a>
                 <h2 class="mb-0">
@@ -161,7 +161,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 
 const empleados = ref([]);
@@ -177,15 +177,32 @@ const formulario = ref({
     password: '', password_confirmation: '', tipo: 'operario'
 });
 
+const baseUrl =
+    (document.head.querySelector('meta[name="base-url"]')?.getAttribute('content') || '')
+        .replace(/\/+$/, '');
+
+const volverHref = computed(() => (baseUrl ? `${baseUrl}/admin/empleados` : '/admin/empleados'));
+
 onMounted(() => {
     cargarEmpleados();
 });
 
 async function cargarEmpleados() {
     try {
-        const response = await axios.get('/admin/api/empleados');
-        empleados.value = response.data;
+        const response = await axios.get('admin/api/empleados');
+        if (Array.isArray(response.data)) {
+            empleados.value = response.data;
+            return;
+        }
+
+        empleados.value = [];
+        mostrarMensaje('No se han podido cargar los empleados (respuesta inesperada).', 'danger');
     } catch (error) {
+        const status = error.response?.status;
+        if (status === 401 || status === 419) {
+            mostrarMensaje('Sesión caducada. Recarga la página y vuelve a iniciar sesión.', 'danger');
+            return;
+        }
         mostrarMensaje('Error al cargar empleados.', 'danger');
     }
 }
@@ -224,12 +241,12 @@ async function guardarEmpleado() {
     try {
         if (modoEdicion.value) {
             await axios.put(
-                `/admin/api/empleados/${empleadoEditandoId.value}`,
+                `admin/api/empleados/${empleadoEditandoId.value}`,
                 formulario.value
             );
             mostrarMensaje('Empleado actualizado correctamente.', 'success');
         } else {
-            await axios.post('/admin/api/empleados', formulario.value);
+            await axios.post('admin/api/empleados', formulario.value);
             mostrarMensaje('Empleado creado correctamente.', 'success');
         }
 
@@ -243,6 +260,11 @@ async function guardarEmpleado() {
         if (error.response?.status === 422) {
             errores.value = error.response.data.errors;
         } else {
+            const status = error.response?.status;
+            if (status === 401 || status === 419) {
+                mostrarMensaje('Sesión caducada. Recarga la página y vuelve a iniciar sesión.', 'danger');
+                return;
+            }
             mostrarMensaje('Error al guardar el empleado.', 'danger');
         }
     } finally {
@@ -255,10 +277,15 @@ async function eliminarEmpleado(empleado) {
         return;
     }
     try {
-        await axios.delete(`/admin/api/empleados/${empleado.id}`);
+        await axios.delete(`admin/api/empleados/${empleado.id}`);
         mostrarMensaje('Empleado eliminado correctamente.', 'success');
         await cargarEmpleados();
     } catch (error) {
+        const status = error.response?.status;
+        if (status === 401 || status === 419) {
+            mostrarMensaje('Sesión caducada. Recarga la página y vuelve a iniciar sesión.', 'danger');
+            return;
+        }
         mostrarMensaje('Error al eliminar el empleado.', 'danger');
     }
 }
